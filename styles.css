@@ -1,0 +1,9 @@
+body { font-family: Arial, sans-serif; background:#111; color:#eee; margin:0; }
+main { max-width: 980px; margin: 0 auto; padding: 1rem; }
+.card { background:#1c1c1c; border:1px solid #333; border-radius:8px; padding:1rem; margin-bottom:1rem; }
+.grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap:.75rem; }
+label { display:flex; flex-direction:column; gap:.35rem; font-size:.9rem; }
+input, textarea, select, button { padding:.5rem; border-radius:6px; border:1px solid #444; background:#222; color:#fff; }
+button { cursor:pointer; font-weight:700; }
+#gallery img { max-width: 256px; border:1px solid #555; border-radius:8px; margin:.5rem .5rem 0 0; }
+pre { white-space: pre-wrap; word-break: break-word; font-size:.8rem; background:#0d0d0d; padding:.7rem; border-radius:6px; }

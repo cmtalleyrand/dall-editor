@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image API Harness</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main>
+    <h1>ChatGPT Image Creator/Editor Harness</h1>
+    <p>Runs in browser and can be installed as a tablet app (PWA).</p>
+
+    <section class="card">
+      <h2>Connection</h2>
+      <label>API Key <input id="apiKey" type="password" placeholder="sk-..." /></label>
+      <label>Endpoint
+        <select id="endpoint">
+          <option value="generations">/v1/images/generations</option>
+          <option value="edits">/v1/images/edits</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="card grid">
+      <h2>All API Input Fields (Image API)</h2>
+      <label>model <input id="model" value="gpt-image-1" /></label>
+      <label>prompt <textarea id="prompt" rows="3"></textarea></label>
+      <label>n <input id="n" type="number" min="1" max="10" value="1" /></label>
+      <label>size
+        <select id="size"><option>auto</option><option>1024x1024</option><option>1536x1024</option><option>1024x1536</option></select>
+      </label>
+      <label>quality
+        <select id="quality"><option>auto</option><option>low</option><option>medium</option><option>high</option></select>
+      </label>
+      <label>background
+        <select id="background"><option>auto</option><option>transparent</option><option>opaque</option></select>
+      </label>
+      <label>output_format
+        <select id="outputFormat"><option>png</option><option>jpeg</option><option>webp</option></select>
+      </label>
+      <label>output_compression (0-100)
+        <input id="outputCompression" type="number" min="0" max="100" value="100" />
+      </label>
+      <label>moderation
+        <select id="moderation"><option>auto</option><option>low</option></select>
+      </label>
+      <label>response_format
+        <select id="responseFormat"><option>b64_json</option><option>url</option></select>
+      </label>
+      <label>user <input id="user" placeholder="optional end-user id" /></label>
+      <label>image (for edits)
+        <input id="image" type="file" accept="image/*" multiple />
+      </label>
+      <label>mask (for edits)
+        <input id="mask" type="file" accept="image/*" />
+      </label>
+    </section>
+
+    <section class="card">
+      <button id="send">Send Request</button>
+      <pre id="requestPreview"></pre>
+      <pre id="rawResponse"></pre>
+      <div id="gallery"></div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
