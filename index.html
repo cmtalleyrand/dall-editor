@@ -14,13 +14,28 @@
 
     <section class="card">
       <h2>Connection</h2>
-      <label>API Key <input id="apiKey" type="password" placeholder="sk-..." /></label>
+      <label>Transport
+        <select id="transport">
+          <option value="proxy">Use local proxy endpoint (recommended)</option>
+          <option value="direct">Direct OpenAI call from browser</option>
+        </select>
+      </label>
+      <label>Base URL
+        <input id="baseUrl" value="http://localhost:8787" />
+      </label>
+      <label>OpenAI API key (name: OPENAI_API_KEY)
+        <input id="apiKey" type="password" placeholder="sk-..." />
+      </label>
+      <label>Save key for this tab only
+        <input id="rememberKey" type="checkbox" />
+      </label>
       <label>Endpoint
         <select id="endpoint">
           <option value="generations">/v1/images/generations</option>
           <option value="edits">/v1/images/edits</option>
         </select>
       </label>
+      <p class="note">If you pick <strong>proxy</strong>, set your server env variable <code>OPENAI_API_KEY</code> and leave the key field blank here.</p>
     </section>
 
     <section class="card grid">

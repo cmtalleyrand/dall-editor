@@ -7,3 +7,5 @@ input, textarea, select, button { padding:.5rem; border-radius:6px; border:1px s
 button { cursor:pointer; font-weight:700; }
 #gallery img { max-width: 256px; border:1px solid #555; border-radius:8px; margin:.5rem .5rem 0 0; }
 pre { white-space: pre-wrap; word-break: break-word; font-size:.8rem; background:#0d0d0d; padding:.7rem; border-radius:6px; }
+.note { font-size: .85rem; color: #bdbdbd; margin-top: .75rem; }
+code { background:#2a2a2a; padding:.1rem .25rem; border-radius:4px; }

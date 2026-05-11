@@ -50,14 +50,31 @@ function renderImages(data) {
   }
 }
 
+function maybeStoreKey() {
+  if ($("rememberKey").checked) {
+    sessionStorage.setItem("openai_api_key", $("apiKey").value);
+  } else {
+    sessionStorage.removeItem("openai_api_key");
+  }
+}
+
+function resolveUrl(endpoint) {
+  const transport = $("transport").value;
+  const base = $("baseUrl").value.trim().replace(/\/$/, "");
+  if (transport === "direct") return `https://api.openai.com/v1/images/${endpoint}`;
+  return `${base}/v1/images/${endpoint}`;
+}
+
 async function sendRequest() {
+  maybeStoreKey();
   const key = $("apiKey").value.trim();
   const endpoint = $("endpoint").value;
   const fields = readFieldValues();
 
-  const url = `https://api.openai.com/v1/images/${endpoint}`;
+  const url = resolveUrl(endpoint);
   let body;
-  const headers = { Authorization: `Bearer ${key}` };
+  const headers = {};
+  if (key) headers.Authorization = `Bearer ${key}`;
 
   if (endpoint === "generations") {
     body = JSON.stringify(makeGenerationPayload(fields));
@@ -79,6 +96,12 @@ $("send").addEventListener("click", () => {
     $("rawResponse").textContent = String(err);
   });
 });
+
+const cachedKey = sessionStorage.getItem("openai_api_key");
+if (cachedKey) {
+  $("apiKey").value = cachedKey;
+  $("rememberKey").checked = true;
+}
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
