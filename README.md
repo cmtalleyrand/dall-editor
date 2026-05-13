@@ -125,6 +125,6 @@ The workflow copies only the static runtime files into a `site/` directory befor
 4. In Safari on iPad, choose **Share → Add to Home Screen**.
 5. Launch **Image API Harness** from the tablet home screen.
 
-The installed app still calls the same hosted URL. It is a home-screen wrapper around the web app, with cached static files for faster startup.
+The installed app still calls the same hosted URL. It is a home-screen wrapper around the web app, with cached static files for faster startup. The service worker checks the network before serving cached same-origin files, claims updated clients immediately, and removes older caches during activation. That update path prevents an old cached `app.js` from continuing to send retired request fields such as `response_format` after a deployment.
 
 The repository uses a text SVG icon rather than PNG binaries so the complete PR remains text-only.

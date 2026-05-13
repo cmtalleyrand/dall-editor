@@ -18,6 +18,15 @@ function makeNode(tag) {
 const elements = new Map([
   ["transport", { value: "direct" }],
   ["baseUrl", { value: "" }],
+  ["endpoint", { value: "generations" }],
+  ["model", { value: "gpt-image-1.5" }],
+  ["prompt", { value: "a test image" }],
+  ["n", { value: "1" }],
+  ["size", { value: "auto" }],
+  ["quality", { value: "auto" }],
+  ["background", { value: "auto" }],
+  ["outputCompression", { value: "100" }],
+  ["moderation", { value: "auto" }],
   ["send", { addEventListener() {} }],
   ["installButton", { addEventListener() {}, hidden: true }],
   ["installStatus", { textContent: "" }],
@@ -25,6 +34,10 @@ const elements = new Map([
   ["apiKey", { value: "" }],
   ["rememberKey", { checked: false }],
   ["outputFormat", { value: "webp" }],
+  ["responseFormat", { value: "b64_json" }],
+  ["user", { value: "" }],
+  ["requestPreview", { textContent: "" }],
+  ["rawResponse", { textContent: "" }],
   ["gallery", { innerHTML: "old", children: [], appendChild(node) { this.children.push(node); } }]
 ]);
 
@@ -36,7 +49,7 @@ global.window = { addEventListener() {}, location: { origin: "http://app.example
 global.navigator = {};
 global.sessionStorage = { getItem() { return null; }, setItem() {}, removeItem() {} };
 
-const { makeGenerationPayload, makeImagePayload, parseResponseBody, renderImages, resolveUrl, summarizeError } = require("./app.js");
+const { makeGenerationPayload, makeImagePayload, parseResponseBody, renderImages, resolveUrl, sendRequest, summarizeError } = require("./app.js");
 
 renderImages({ output_format: "png", data: [{ b64_json: "abc123" }] });
 const figure = elements.get("gallery").children[0];
@@ -57,23 +70,41 @@ assert.deepEqual(
 assert.equal(summarizeError({ error: { message: "Unknown parameter: 'response_format'.", param: "response_format", code: "unknown_parameter" } }), "Unknown parameter: 'response_format'. Parameter: response_format. Code: unknown_parameter.");
 assert.deepEqual(parseResponseBody("not json"), { error: { message: "not json" } });
 
-assert.equal(resolveUrl("generations"), "https://api.openai.com/v1/images/generations");
-assert.equal(resolveUrl("edits"), "https://api.openai.com/v1/images/edits");
+let capturedRequest;
+global.fetch = async (url, options) => {
+  capturedRequest = { url, options };
+  return { ok: true, text: async () => JSON.stringify({ data: [] }) };
+};
 
-elements.get("transport").value = "proxy";
-assert.throws(() => resolveUrl("generations"), /Base URL is required/);
-elements.get("baseUrl").value = "https://gateway.example/";
-assert.equal(resolveUrl("generations"), "https://gateway.example/v1/images/generations");
+(async () => {
+  await sendRequest();
+  const defaultPayload = JSON.parse(capturedRequest.options.body);
+  assert.equal(capturedRequest.url, "https://api.openai.com/v1/images/generations");
+  assert.equal(capturedRequest.options.headers["Content-Type"], "application/json");
+  assert.equal(defaultPayload.model, "gpt-image-1.5");
+  assert.equal(Object.hasOwn(defaultPayload, "response_format"), false);
+  assert.equal(elements.get("requestPreview").textContent.includes("response_format"), false);
 
-const html = fs.readFileSync("index.html", "utf8");
-const readme = fs.readFileSync("README.md", "utf8");
-const sw = fs.readFileSync("sw.js", "utf8");
-assert.match(html, /<option value="direct">Direct OpenAI call<\/option>/);
-assert.ok(html.indexOf('value="direct"') < html.indexOf('value="proxy"'));
-assert.match(html, /Custom compatible endpoint/);
-assert.match(html, /value="gpt-image-1\.5"/);
-assert.match(html, /id="responseStatus"/);
-assert.match(readme, /does not include an application backend/);
-assert.match(readme, /omits `response_format` unless the model name starts with `dall-e-`/);
-assert.doesNotMatch(readme, /node server\.js/);
-assert.match(sw, /image-harness-v6/);
+  assert.equal(resolveUrl("generations"), "https://api.openai.com/v1/images/generations");
+  assert.equal(resolveUrl("edits"), "https://api.openai.com/v1/images/edits");
+
+  elements.get("transport").value = "proxy";
+  assert.throws(() => resolveUrl("generations"), /Base URL is required/);
+  elements.get("baseUrl").value = "https://gateway.example/";
+  assert.equal(resolveUrl("generations"), "https://gateway.example/v1/images/generations");
+
+  const html = fs.readFileSync("index.html", "utf8");
+  const readme = fs.readFileSync("README.md", "utf8");
+  const sw = fs.readFileSync("sw.js", "utf8");
+  assert.match(html, /<option value="direct">Direct OpenAI call<\/option>/);
+  assert.ok(html.indexOf('value="direct"') < html.indexOf('value="proxy"'));
+  assert.match(html, /Custom compatible endpoint/);
+  assert.match(html, /value="gpt-image-1\.5"/);
+  assert.match(html, /id="responseStatus"/);
+  assert.match(readme, /does not include an application backend/);
+  assert.match(readme, /omits `response_format` unless the model name starts with `dall-e-`/);
+  assert.doesNotMatch(readme, /node server\.js/);
+  assert.match(sw, /image-harness-v7/);
+  assert.match(sw, /skipWaiting/);
+  assert.match(sw, /clients\.claim/);
+})();

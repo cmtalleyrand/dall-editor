@@ -116,6 +116,23 @@ function updateStatus(message, isError = false) {
   status.classList.toggle("error", isError);
 }
 
+function summarizeError(data, fallbackText) {
+  const error = data?.error;
+  if (error?.message) {
+    const pieces = [error.message];
+    if (error.param) pieces.push(`Parameter: ${error.param}.`);
+    if (error.code) pieces.push(`Code: ${error.code}.`);
+    return pieces.join(" ");
+  }
+  return fallbackText || "Request failed before the app could read an error response.";
+}
+
+function updateStatus(message, isError = false) {
+  const status = $("responseStatus");
+  status.textContent = message;
+  status.classList.toggle("error", isError);
+}
+
 function maybeStoreKey() {
   if ($("rememberKey").checked) {
     sessionStorage.setItem("openai_api_key", $("apiKey").value);
@@ -206,9 +223,19 @@ if (cachedKey) {
 }
 
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+  const hadServiceWorkerController = Boolean(navigator.serviceWorker.controller);
+  let serviceWorkerReloading = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadServiceWorkerController || serviceWorkerReloading) return;
+    serviceWorkerReloading = true;
+    window.location.reload();
+  });
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" })
+      .then((registration) => registration.update());
+  });
 }
 
 if (typeof module !== "undefined") {
-  module.exports = { makeGenerationPayload, makeImagePayload, parseResponseBody, renderImages, resolveUrl, summarizeError };
+  module.exports = { makeGenerationPayload, makeImagePayload, parseResponseBody, renderImages, resolveUrl, sendRequest, summarizeError };
 }
