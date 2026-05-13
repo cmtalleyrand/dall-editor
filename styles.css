@@ -223,12 +223,38 @@ details[open] summary { margin-bottom: .75rem; }
 
 .gallery:empty { display: none; }
 
+.gallery figure {
+  display: grid;
+  gap: .55rem;
+  margin: 0;
+}
+
 .gallery img {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: rgba(5, 10, 24, .72);
 }
+
+.gallery a {
+  display: inline-flex;
+  justify-content: center;
+  padding: .62rem .75rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: .86rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.response-status {
+  margin: 1rem 0 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.response-status.error { color: #fecaca; }
 
 .response-grid {
   display: grid;

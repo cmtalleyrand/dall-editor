@@ -38,7 +38,7 @@
         </label>
 
         <div class="field-grid">
-          <label>Model <input id="model" value="gpt-image-2" /></label>
+          <label>Model <input id="model" value="gpt-image-1.5" /></label>
           <label>Images <input id="n" type="number" min="1" max="10" value="1" /></label>
           <label>Size
             <select id="size"><option>auto</option><option>1024x1024</option><option>1536x1024</option><option>1024x1536</option></select>
@@ -58,8 +58,8 @@
           <label>Moderation
             <select id="moderation"><option>auto</option><option>low</option></select>
           </label>
-          <label>Response
-            <select id="responseFormat"><option>b64_json</option><option value="url">url (DALL·E only)</option></select>
+          <label>DALL·E response
+            <select id="responseFormat"><option>b64_json</option><option value="url">url (DALL·E default)</option></select>
           </label>
           <label>User <span class="field-hint">optional</span><input id="user" placeholder="end-user id" /></label>
         </div>
@@ -120,6 +120,7 @@
           <h2>Preview and response</h2>
         </div>
       </div>
+      <p id="responseStatus" class="response-status">Ready to send an image request.</p>
       <div id="gallery" class="gallery"></div>
       <div class="response-grid">
         <div>

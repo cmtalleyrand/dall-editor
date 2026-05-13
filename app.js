@@ -17,11 +17,29 @@ function readFieldValues() {
   };
 }
 
-function makeGenerationPayload(fields) {
+function isDallEModel(model) {
+  return model.startsWith("dall-e-");
+}
+
+function makeImagePayload(fields, endpoint) {
   const payload = { ...fields };
   if (!payload.user) delete payload.user;
-  if (payload.model.startsWith("gpt-image-")) delete payload.response_format;
+
+  if (!isDallEModel(payload.model)) {
+    delete payload.response_format;
+    return payload;
+  }
+
+  delete payload.background;
+  delete payload.output_format;
+  delete payload.output_compression;
+  delete payload.moderation;
+  if (endpoint === "edits") delete payload.quality;
   return payload;
+}
+
+function makeGenerationPayload(fields) {
+  return makeImagePayload(fields, "generations");
 }
 
 function appendFormField(formData, key, value) {
@@ -31,26 +49,71 @@ function appendFormField(formData, key, value) {
 
 async function makeEditFormData(fields) {
   const form = new FormData();
-  for (const [k, v] of Object.entries(fields)) {
-    if (k !== "response_format") appendFormField(form, k, v);
-  }
+  const payload = makeImagePayload(fields, "edits");
+  for (const [k, v] of Object.entries(payload)) appendFormField(form, k, v);
   const images = $("image").files;
   for (let i = 0; i < images.length; i += 1) form.append("image", images[i]);
   if ($("mask").files[0]) form.append("mask", $("mask").files[0]);
   return form;
 }
 
+function clearElement(node) {
+  node.innerHTML = "";
+  if (Array.isArray(node.children)) node.children.length = 0;
+}
+
+function makeDownloadName(index, format) {
+  return `image-${new Date().toISOString().replace(/[:.]/g, "-")}-${index + 1}.${format}`;
+}
+
 function renderImages(data) {
   const gallery = $("gallery");
-  gallery.innerHTML = "";
+  clearElement(gallery);
   const images = data?.data ?? [];
   for (let i = 0; i < images.length; i += 1) {
     const item = images[i];
+    const figure = document.createElement("figure");
     const img = document.createElement("img");
-    const format = $("outputFormat").value || "png";
-    img.src = item.url ? item.url : `data:image/${format};base64,${item.b64_json}`;
-    gallery.appendChild(img);
+    const format = data.output_format || $("outputFormat").value || "png";
+    const src = item.url ? item.url : `data:image/${format};base64,${item.b64_json}`;
+    img.src = src;
+    figure.appendChild(img);
+
+    const link = document.createElement("a");
+    link.href = src;
+    link.textContent = "Save image";
+    link.download = item.url ? "" : makeDownloadName(i, format);
+    link.target = item.url ? "_blank" : "";
+    link.rel = item.url ? "noopener" : "";
+    figure.appendChild(link);
+    gallery.appendChild(figure);
   }
+}
+
+function parseResponseBody(text) {
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { error: { message: text } };
+  }
+}
+
+function summarizeError(data, fallbackText) {
+  const error = data?.error;
+  if (error?.message) {
+    const pieces = [error.message];
+    if (error.param) pieces.push(`Parameter: ${error.param}.`);
+    if (error.code) pieces.push(`Code: ${error.code}.`);
+    return pieces.join(" ");
+  }
+  return fallbackText || "Request failed before the app could read an error response.";
+}
+
+function updateStatus(message, isError = false) {
+  const status = $("responseStatus");
+  status.textContent = message;
+  status.classList.toggle("error", isError);
 }
 
 function maybeStoreKey() {
@@ -89,11 +152,18 @@ async function sendRequest() {
     $("requestPreview").textContent = "multipart/form-data payload (binary omitted)";
   }
 
+  updateStatus("Sending request...");
   const resp = await fetch(url, { method: "POST", headers, body });
   const text = await resp.text();
-  const data = text ? JSON.parse(text) : {};
+  const data = parseResponseBody(text);
   $("rawResponse").textContent = JSON.stringify(data, null, 2);
+  if (!resp.ok) {
+    updateStatus(summarizeError(data, text), true);
+    clearElement($("gallery"));
+    return;
+  }
   renderImages(data);
+  updateStatus(data?.data?.length ? `Rendered ${data.data.length} image${data.data.length === 1 ? "" : "s"}.` : "Request succeeded, but no images were returned.");
 }
 
 function updateInstallStatus(message) {
@@ -124,6 +194,7 @@ window.addEventListener("appinstalled", () => {
 
 $("send").addEventListener("click", () => {
   sendRequest().catch((err) => {
+    updateStatus(String(err), true);
     $("rawResponse").textContent = `${String(err)}\n\nIf this says Failed to fetch, the browser did not receive an HTTP response. In direct mode, check network access to api.openai.com and browser policy. In custom endpoint mode, verify Base URL points at an endpoint you already operate.`;
   });
 });
@@ -135,9 +206,19 @@ if (cachedKey) {
 }
 
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+  const hadServiceWorkerController = Boolean(navigator.serviceWorker.controller);
+  let serviceWorkerReloading = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadServiceWorkerController || serviceWorkerReloading) return;
+    serviceWorkerReloading = true;
+    window.location.reload();
+  });
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" })
+      .then((registration) => registration.update());
+  });
 }
 
 if (typeof module !== "undefined") {
-  module.exports = { makeGenerationPayload, renderImages, resolveUrl };
+  module.exports = { makeGenerationPayload, makeImagePayload, parseResponseBody, renderImages, resolveUrl, sendRequest, summarizeError };
 }
