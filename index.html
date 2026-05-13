@@ -38,7 +38,7 @@
         </label>
 
         <div class="field-grid">
-          <label>Model <input id="model" value="gpt-image-1" /></label>
+          <label>Model <input id="model" value="gpt-image-2" /></label>
           <label>Images <input id="n" type="number" min="1" max="10" value="1" /></label>
           <label>Size
             <select id="size"><option>auto</option><option>1024x1024</option><option>1536x1024</option><option>1024x1536</option></select>
@@ -59,7 +59,7 @@
             <select id="moderation"><option>auto</option><option>low</option></select>
           </label>
           <label>Response
-            <select id="responseFormat"><option>b64_json</option><option>url</option></select>
+            <select id="responseFormat"><option>b64_json</option><option value="url">url (DALL·E only)</option></select>
           </label>
           <label>User <span class="field-hint">optional</span><input id="user" placeholder="end-user id" /></label>
         </div>
@@ -82,12 +82,12 @@
           <h2>Connection</h2>
           <label>Transport
             <select id="transport">
-              <option value="proxy">Local proxy endpoint</option>
               <option value="direct">Direct OpenAI call</option>
+              <option value="proxy">Custom compatible endpoint</option>
             </select>
           </label>
           <label>Base URL
-            <input id="baseUrl" value="http://localhost:8787" />
+            <input id="baseUrl" value="" placeholder="custom endpoint origin, e.g. https://gateway.example" />
           </label>
           <label>OpenAI API key
             <input id="apiKey" type="password" placeholder="sk-..." />
@@ -96,7 +96,7 @@
             <input id="rememberKey" type="checkbox" />
             <span>Save key for this tab only</span>
           </label>
-          <p class="note">Proxy mode reads <code>OPENAI_API_KEY</code> from your server, so the browser key can stay blank.</p>
+          <p class="note">Direct mode is a browser request to OpenAI for local manual testing and may be blocked by browser policy. Custom endpoint mode appends <code>/v1/images/*</code> to Base URL.</p>
         </section>
 
         <details class="card install-card">
