@@ -116,6 +116,23 @@ function updateStatus(message, isError = false) {
   status.classList.toggle("error", isError);
 }
 
+function summarizeError(data, fallbackText) {
+  const error = data?.error;
+  if (error?.message) {
+    const pieces = [error.message];
+    if (error.param) pieces.push(`Parameter: ${error.param}.`);
+    if (error.code) pieces.push(`Code: ${error.code}.`);
+    return pieces.join(" ");
+  }
+  return fallbackText || "Request failed before the app could read an error response.";
+}
+
+function updateStatus(message, isError = false) {
+  const status = $("responseStatus");
+  status.textContent = message;
+  status.classList.toggle("error", isError);
+}
+
 function maybeStoreKey() {
   if ($("rememberKey").checked) {
     sessionStorage.setItem("openai_api_key", $("apiKey").value);
