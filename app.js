@@ -20,6 +20,7 @@ function readFieldValues() {
 function makeGenerationPayload(fields) {
   const payload = { ...fields };
   if (!payload.user) delete payload.user;
+  if (payload.model.startsWith("gpt-image-")) delete payload.response_format;
   return payload;
 }
 
@@ -46,7 +47,8 @@ function renderImages(data) {
   for (let i = 0; i < images.length; i += 1) {
     const item = images[i];
     const img = document.createElement("img");
-    img.src = item.url ? item.url : `data:image/png;base64,${item.b64_json}`;
+    const format = $("outputFormat").value || "png";
+    img.src = item.url ? item.url : `data:image/${format};base64,${item.b64_json}`;
     gallery.appendChild(img);
   }
 }
@@ -63,6 +65,7 @@ function resolveUrl(endpoint) {
   const transport = $("transport").value;
   const base = $("baseUrl").value.trim().replace(/\/$/, "");
   if (transport === "direct") return `https://api.openai.com/v1/images/${endpoint}`;
+  if (!base) throw new Error("Base URL is required for custom endpoint mode.");
   return `${base}/v1/images/${endpoint}`;
 }
 
@@ -87,7 +90,8 @@ async function sendRequest() {
   }
 
   const resp = await fetch(url, { method: "POST", headers, body });
-  const data = await resp.json();
+  const text = await resp.text();
+  const data = text ? JSON.parse(text) : {};
   $("rawResponse").textContent = JSON.stringify(data, null, 2);
   renderImages(data);
 }
@@ -120,7 +124,7 @@ window.addEventListener("appinstalled", () => {
 
 $("send").addEventListener("click", () => {
   sendRequest().catch((err) => {
-    $("rawResponse").textContent = String(err);
+    $("rawResponse").textContent = `${String(err)}\n\nIf this says Failed to fetch, the browser did not receive an HTTP response. In direct mode, check network access to api.openai.com and browser policy. In custom endpoint mode, verify Base URL points at an endpoint you already operate.`;
   });
 });
 
@@ -135,5 +139,5 @@ if ("serviceWorker" in navigator) {
 }
 
 if (typeof module !== "undefined") {
-  module.exports = { resolveUrl };
+  module.exports = { makeGenerationPayload, renderImages, resolveUrl };
 }
