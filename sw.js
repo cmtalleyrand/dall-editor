@@ -1,4 +1,4 @@
-const CACHE = "image-harness-v5";
+const CACHE = "image-harness-v6";
 const ASSETS = ["./", "./index.html", "./styles.css", "./app.js", "./manifest.webmanifest", "./icons/icon.svg"];
 
 self.addEventListener("install", (event) => {

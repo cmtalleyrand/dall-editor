@@ -28,6 +28,7 @@ Future changes should optimize for these constraints:
 - Prefer OpenAI first while keeping provider-specific assumptions localized enough that OpenAI-compatible APIs remain plausible later.
 - Add result download, local session history, and edit ancestry because output management is part of the target workflow.
 - Show human-readable error summaries with raw details available underneath.
+- Keep rendered outputs directly saveable from the gallery so a successful generation has an immediate next action.
 
 ### Connection model implications
 
@@ -80,7 +81,7 @@ For generation, the browser sends JSON shaped like this:
 
 ```json
 {
-  "model": "gpt-image-2",
+  "model": "gpt-image-1.5",
   "prompt": "A concise description of the desired image",
   "n": 1,
   "size": "auto",
@@ -97,7 +98,7 @@ For edits, the browser sends `multipart/form-data` with the same scalar fields, 
 - `image`: one or more source image files.
 - `mask`: an optional mask image.
 
-For GPT Image models, the Image API returns base64 image data by default. The harness omits `response_format` for `gpt-image-*` models because URL responses are unsupported for GPT Image models. The renderer expects the response to contain a top-level `data` array. Each item can contain either:
+For GPT Image models, the Image API returns base64 image data by default. The harness omits `response_format` unless the model name starts with `dall-e-`, because URL responses are unsupported for GPT Image models and unknown response-format fields cause the API to reject otherwise valid GPT Image requests. For DALL·E models, the harness also omits GPT-only controls such as `background`, `output_format`, `output_compression`, and `moderation`. The renderer expects the response to contain a top-level `data` array. Each item can contain either:
 
 - `b64_json`, which the app renders as a `data:image/<selected-format>;base64,...` URL, or
 - `url`, which the app assigns directly to an `<img>` element.
