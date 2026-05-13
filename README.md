@@ -2,21 +2,45 @@
 
 This project is a static Progressive Web App (PWA) for manually exercising the OpenAI Image API. It is a harness: it does not include an application backend, database, build system, job queue, or local proxy server.
 
-The app collects form fields in the browser, builds either a JSON request or a `multipart/form-data` request, sends that request to a selected Image API endpoint, and renders each returned image from either `b64_json` or `url`. For `k` returned images, rendering is `O(k)` because the app creates one `<img>` element per response item.
+## Product direction
 
-## Why `TypeError: Failed to fetch` happened
+The intended end goal is a personal, tablet-friendly image generation and editing app rather than a pure developer console. The app should remain useful to a small trusted group, expose enough Image API controls for experimentation, and keep request/response details available without making them the primary interaction.
 
-`TypeError: Failed to fetch` is a browser network failure. Formally, JavaScript did not receive an HTTP response object. That differs from an OpenAI API response such as HTTP `400`, `401`, or `429`, where the server returns JSON and the app can display it.
+The core workflow should be iterative:
 
-The previous default selected a local proxy URL even though this repository is only a static harness. If nothing is listening at that URL, the browser cannot complete the TCP/HTTP request, so `fetch` rejects with `TypeError: Failed to fetch` before the app can show an API error body.
+1. Generate an image from a prompt.
+2. Pick a result.
+3. Edit or refine that result.
+4. Save useful outputs.
+5. Keep enough local history to compare branches of work.
 
-The app now defaults to **Direct OpenAI call**, which attempts a browser request to `https://api.openai.com/v1/images/<endpoint>`. This is a valid harness behavior, but it is not a production application architecture: browser policy can still block the request, and the browser necessarily sees the API key. A second transport, **Custom compatible endpoint**, remains available for users who already have their own compatible gateway; because this repository is a harness, it does not create that gateway for you.
+The minimum useful product is not just a static form. It must actually produce images in a normal setup, make successful outputs easy to save, and provide readable failures when generation does not work.
 
-## Security boundary
+### Development implications
 
-Direct mode places the API key in browser memory and sends it from the browser. OpenAI's authentication documentation says API keys should not be exposed in client-side code; see `https://platform.openai.com/docs/api-reference/authentication`. Therefore, direct mode is only a personal/local harness mode. For shared, production, or untrusted-user deployments, use your own server-side gateway and select **Custom compatible endpoint**. If direct mode produces `TypeError: Failed to fetch`, the static files are working but the browser did not allow the cross-origin API request to complete.
+Future changes should optimize for these constraints:
 
-## Local static run
+- Prioritize a reliable generate-image path before adding more advanced controls.
+- Keep the UI personal-tool polished: clear, compact, and pleasant, but not product/SaaS heavy.
+- Keep advanced Image API parameters available because the user values control.
+- Put request payloads and raw responses in a secondary debugging area, not in the main creative path.
+- Support desktop, phone, and hosted use, but treat tablet PWA ergonomics as the main design target.
+- Prefer OpenAI first while keeping provider-specific assumptions localized enough that OpenAI-compatible APIs remain plausible later.
+- Add result download, local session history, and edit ancestry because output management is part of the target workflow.
+- Show human-readable error summaries with raw details available underneath.
+
+### Connection model implications
+
+The app currently supports two request paths:
+
+- Direct mode: the browser calls OpenAI directly and must provide an API key in the browser.
+- Proxy mode: the browser calls a server controlled by the user, and that server forwards the request to OpenAI.
+
+The proxy choice matters because it determines where the API key lives, where failures occur, and what deployment can work safely. A static GitHub Pages deployment can serve the frontend, but it cannot keep a shared OpenAI API key secret by itself. If the app should work for a trusted small group without every person handling their own key, it needs a proxy or another backend. If it is only a personal tool and direct browser use is acceptable, direct mode is simpler.
+
+Until the authentication decision is settled, development should make the tradeoff explicit rather than hiding it behind an unexplained base URL. The next connection-related change should either document a working direct-call setup or add a small proxy path that makes local generation work out of the box.
+
+## Local test run
 
 ```bash
 python -m http.server 8000
