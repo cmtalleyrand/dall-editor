@@ -9,87 +9,128 @@
 </head>
 <body>
   <main>
-    <h1>ChatGPT Image Creator/Editor Harness</h1>
-    <p>Runs in browser and can be installed as a tablet app (PWA).</p>
+    <header class="hero">
+      <div>
+        <p class="eyebrow">OpenAI Image API Harness</p>
+        <h1>Create and edit images without the clutter.</h1>
+        <p class="lede">Keep the prompt, request action, and results in the primary workspace; move connection settings and install notes to compact side panels.</p>
+      </div>
+      <button id="send" class="primary-action">Send Request</button>
+    </header>
 
-    <section class="card">
-      <h2>Download / install on a tablet</h2>
-      <p class="note">This is a Progressive Web App: there is no app-store package to download. Open the hosted page in your tablet browser, then install it to the home screen.</p>
-      <ol>
-        <li>Host this folder over HTTPS, or use <code>http://localhost</code> while developing.</li>
-        <li>Open the app URL in Chrome, Edge, or Safari on the tablet.</li>
-        <li>Use the browser install action: Chrome/Edge show <strong>Install app</strong>; Safari uses <strong>Share → Add to Home Screen</strong>.</li>
-      </ol>
-      <button id="installButton" hidden>Install app</button>
-      <p id="installStatus" class="note">If the install button is hidden, use your browser menu or Share sheet to add the app to the home screen.</p>
-    </section>
+    <div class="app-shell">
+      <section class="card workspace-card">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Request</p>
+            <h2>Image inputs</h2>
+          </div>
+          <label class="compact-field">Endpoint
+            <select id="endpoint">
+              <option value="generations">Generate</option>
+              <option value="edits">Edit</option>
+            </select>
+          </label>
+        </div>
 
-    <section class="card">
-      <h2>Connection</h2>
-      <label>Transport
-        <select id="transport">
-          <option value="proxy">Use local proxy endpoint (recommended)</option>
-          <option value="direct">Direct OpenAI call from browser</option>
-        </select>
-      </label>
-      <label>Base URL
-        <input id="baseUrl" value="http://localhost:8787" />
-      </label>
-      <label>OpenAI API key (name: OPENAI_API_KEY)
-        <input id="apiKey" type="password" placeholder="sk-..." />
-      </label>
-      <label>Save key for this tab only
-        <input id="rememberKey" type="checkbox" />
-      </label>
-      <label>Endpoint
-        <select id="endpoint">
-          <option value="generations">/v1/images/generations</option>
-          <option value="edits">/v1/images/edits</option>
-        </select>
-      </label>
-      <p class="note">If you pick <strong>proxy</strong>, set your server env variable <code>OPENAI_API_KEY</code> and leave the key field blank here.</p>
-    </section>
+        <label class="prompt-field">Prompt
+          <textarea id="prompt" rows="6" placeholder="Describe the image you want to create or the edit you want to apply."></textarea>
+        </label>
 
-    <section class="card grid">
-      <h2>All API Input Fields (Image API)</h2>
-      <label>model <input id="model" value="gpt-image-1" /></label>
-      <label>prompt <textarea id="prompt" rows="3"></textarea></label>
-      <label>n <input id="n" type="number" min="1" max="10" value="1" /></label>
-      <label>size
-        <select id="size"><option>auto</option><option>1024x1024</option><option>1536x1024</option><option>1024x1536</option></select>
-      </label>
-      <label>quality
-        <select id="quality"><option>auto</option><option>low</option><option>medium</option><option>high</option></select>
-      </label>
-      <label>background
-        <select id="background"><option>auto</option><option>transparent</option><option>opaque</option></select>
-      </label>
-      <label>output_format
-        <select id="outputFormat"><option>png</option><option>jpeg</option><option>webp</option></select>
-      </label>
-      <label>output_compression (0-100)
-        <input id="outputCompression" type="number" min="0" max="100" value="100" />
-      </label>
-      <label>moderation
-        <select id="moderation"><option>auto</option><option>low</option></select>
-      </label>
-      <label>response_format
-        <select id="responseFormat"><option>b64_json</option><option>url</option></select>
-      </label>
-      <label>user <input id="user" placeholder="optional end-user id" /></label>
-      <label>image (for edits)
-        <input id="image" type="file" accept="image/*" multiple />
-      </label>
-      <label>mask (for edits)
-        <input id="mask" type="file" accept="image/*" />
-      </label>
-    </section>
+        <div class="field-grid">
+          <label>Model <input id="model" value="gpt-image-1" /></label>
+          <label>Images <input id="n" type="number" min="1" max="10" value="1" /></label>
+          <label>Size
+            <select id="size"><option>auto</option><option>1024x1024</option><option>1536x1024</option><option>1024x1536</option></select>
+          </label>
+          <label>Quality
+            <select id="quality"><option>auto</option><option>low</option><option>medium</option><option>high</option></select>
+          </label>
+          <label>Background
+            <select id="background"><option>auto</option><option>transparent</option><option>opaque</option></select>
+          </label>
+          <label>Format
+            <select id="outputFormat"><option>png</option><option>jpeg</option><option>webp</option></select>
+          </label>
+          <label>Compression <span class="field-hint">0-100</span>
+            <input id="outputCompression" type="number" min="0" max="100" value="100" />
+          </label>
+          <label>Moderation
+            <select id="moderation"><option>auto</option><option>low</option></select>
+          </label>
+          <label>Response
+            <select id="responseFormat"><option>b64_json</option><option>url</option></select>
+          </label>
+          <label>User <span class="field-hint">optional</span><input id="user" placeholder="end-user id" /></label>
+        </div>
 
-    <section class="card">
-      <button id="send">Send Request</button>
-      <pre id="requestPreview"></pre>
-      <pre id="rawResponse"></pre>
-      <div id="gallery"></div>
+        <details class="edit-fields">
+          <summary>Edit-only image files</summary>
+          <div class="field-grid two-column">
+            <label>Source image(s)
+              <input id="image" type="file" accept="image/*" multiple />
+            </label>
+            <label>Mask
+              <input id="mask" type="file" accept="image/*" />
+            </label>
+          </div>
+        </details>
+      </section>
+
+      <aside class="side-stack">
+        <section class="card status-card">
+          <h2>Connection</h2>
+          <label>Transport
+            <select id="transport">
+              <option value="proxy">Local proxy endpoint</option>
+              <option value="direct">Direct OpenAI call</option>
+            </select>
+          </label>
+          <label>Base URL
+            <input id="baseUrl" value="http://localhost:8787" />
+          </label>
+          <label>OpenAI API key
+            <input id="apiKey" type="password" placeholder="sk-..." />
+          </label>
+          <label class="inline-check">
+            <input id="rememberKey" type="checkbox" />
+            <span>Save key for this tab only</span>
+          </label>
+          <p class="note">Proxy mode reads <code>OPENAI_API_KEY</code> from your server, so the browser key can stay blank.</p>
+        </section>
+
+        <details class="card install-card">
+          <summary>Install on a tablet</summary>
+          <p class="note">This Progressive Web App installs from the browser; no app-store package is required.</p>
+          <ol>
+            <li>Host this folder over HTTPS, or use <code>http://localhost</code> while developing.</li>
+            <li>Open the app URL in Chrome, Edge, or Safari on the tablet.</li>
+            <li>Use <strong>Install app</strong> or <strong>Share → Add to Home Screen</strong>.</li>
+          </ol>
+          <button id="installButton" hidden>Install app</button>
+          <p id="installStatus" class="note">If the install button is hidden, use your browser menu or Share sheet.</p>
+        </details>
+      </aside>
+    </div>
+
+    <section class="card output-card">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Output</p>
+          <h2>Preview and response</h2>
+        </div>
+      </div>
+      <div id="gallery" class="gallery"></div>
+      <div class="response-grid">
+        <div>
+          <h3>Request payload</h3>
+          <pre id="requestPreview"></pre>
+        </div>
+        <div>
+          <h3>Raw response</h3>
+          <pre id="rawResponse"></pre>
+        </div>
+      </div>
     </section>
   </main>
   <script src="app.js"></script>
