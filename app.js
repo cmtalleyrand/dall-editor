@@ -1,4 +1,5 @@
 const $ = (id) => document.getElementById(id);
+let deferredInstallPrompt = null;
 
 function readFieldValues() {
   return {
@@ -91,6 +92,32 @@ async function sendRequest() {
   renderImages(data);
 }
 
+function updateInstallStatus(message) {
+  $("installStatus").textContent = message;
+}
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  $("installButton").hidden = false;
+  updateInstallStatus("Install is available. Tap Install app to add it to your home screen.");
+});
+
+$("installButton").addEventListener("click", async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const choice = await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  $("installButton").hidden = true;
+  updateInstallStatus(choice.outcome === "accepted" ? "Install accepted." : "Install dismissed. You can still install from the browser menu.");
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  $("installButton").hidden = true;
+  updateInstallStatus("Installed. Launch it from your home screen or app launcher.");
+});
+
 $("send").addEventListener("click", () => {
   sendRequest().catch((err) => {
     $("rawResponse").textContent = String(err);
@@ -105,4 +132,8 @@ if (cachedKey) {
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+}
+
+if (typeof module !== "undefined") {
+  module.exports = { resolveUrl };
 }

@@ -13,6 +13,18 @@
     <p>Runs in browser and can be installed as a tablet app (PWA).</p>
 
     <section class="card">
+      <h2>Download / install on a tablet</h2>
+      <p class="note">This is a Progressive Web App: there is no app-store package to download. Open the hosted page in your tablet browser, then install it to the home screen.</p>
+      <ol>
+        <li>Host this folder over HTTPS, or use <code>http://localhost</code> while developing.</li>
+        <li>Open the app URL in Chrome, Edge, or Safari on the tablet.</li>
+        <li>Use the browser install action: Chrome/Edge show <strong>Install app</strong>; Safari uses <strong>Share → Add to Home Screen</strong>.</li>
+      </ol>
+      <button id="installButton" hidden>Install app</button>
+      <p id="installStatus" class="note">If the install button is hidden, use your browser menu or Share sheet to add the app to the home screen.</p>
+    </section>
+
+    <section class="card">
       <h2>Connection</h2>
       <label>Transport
         <select id="transport">
