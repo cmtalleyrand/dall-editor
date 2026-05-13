@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Image API Harness icon">
+  <rect width="512" height="512" rx="96" fill="#111111"/>
+  <rect x="56" y="56" width="400" height="400" rx="72" fill="none" stroke="#50a0ff" stroke-width="36"/>
+  <circle cx="184" cy="184" r="42" fill="#ffffff"/>
+  <path d="M112 376 232 256l72 72 56-56 88 104z" fill="#ffffff"/>
+</svg>
